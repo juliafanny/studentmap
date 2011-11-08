@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Todo</title>
+  <%= stylesheet_link_tag    "application" %>
+  <%= javascript_include_tag "application" %>
+  <%= csrf_meta_tags %>
+</head>
+<body>
+	<div id="login-out">
+		<% if current_user %>
+			Logged in: <%= current_user.email %>
+			<%= link_to "My page", user_path(current_user) %>
+			<%= link_to "Log Out", log_out_path, :method => :delete %>
+		<% else %>
+			<%= link_to 'Sign up', new_user_path %>
+			or Login:
+		<%= render :partial => 'sessions/form' %>
+		<% end %>
+	</div>
+
+<h1 id="pageTitle">studentmap</h1>
+
+<%= yield %>
+
+</body>
+</html>
