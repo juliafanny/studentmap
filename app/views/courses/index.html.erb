@@ -1,0 +1,3 @@
+<% @courses.each do |c| %>
+	<p><%= link_to c.name, course_path(c) %></p>
+<% end %>

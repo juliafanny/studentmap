@@ -1,0 +1,6 @@
+<p>kurs: <%= @course.name %></p>
+
+<p>schema:</p>
+<% @course.lessons.each do |l| %>
+  <p><%= l.name %> <%= l.datetime %><%= l.location %></p>
+<% end %>
