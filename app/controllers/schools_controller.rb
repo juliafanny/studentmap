@@ -12,7 +12,7 @@ class SchoolsController < ApplicationController
   def show
   	@school = School.find(params[:id])
     
-    if params[:search].length > 0
+    if params[:search] && params[:search].length > 0
       @search = Room.search do
         fulltext params[:search]
       end
