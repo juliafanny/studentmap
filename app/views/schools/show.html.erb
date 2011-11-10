@@ -1,0 +1,13 @@
+<h1><%= @school.name %></h1>
+<ul>
+<%= form_tag school_path(@school), :method => :get do %>
+  <p>
+    <%= text_field_tag :search, params[:search] %>
+    <%= submit_tag "Search", :name => nil %>
+  </p>
+<% end %>
+
+<% @rooms.each do |room| %>
+	<li><%= link_to room.name, room_path(room) %></li>
+<% end %>
+</ul>

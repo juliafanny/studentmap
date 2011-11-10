@@ -1,5 +1,14 @@
 Studentmap::Application.routes.draw do
-  root :to => "sessions#new"
+  get "schools/index"
+
+  resources :schools do
+    resources :buildings
+    resources :rooms
+  end
+
+  resources :rooms
+
+  root :to => "schools#index"
 
   get "sign_up" => "users#new", :as => "sign_up"
   get "log_in" => "sessions#new", :as => "log_in"
