@@ -1,6 +1,17 @@
+<% content_for :head do %>
+  <script type="text/javascript"
+    src="http://maps.googleapis.com/maps/api/js?sensor=false">
+  </script>
+  <script type="text/javascript">
+  $(function() {
+      initialize_googlemaps($('.map_canvas').get(0));
+  });
+  </script>
+<% end %>
+
 <h1><%= @room.name %></h1>
 <div id="latitude" class="hiddenValue"><%= @room.building.latitude %></div>
 <div id="longditude" class="hiddenValue"><%= @room.building.longditude %></div>
 <div id="roomName" class="hiddenValue"><%= @room.building.name %></div>
 
-<div id="map_canvas" style="width:640px; height:480px"></div>
+<div class="map_canvas" style="width:640px; height:480px"></div>

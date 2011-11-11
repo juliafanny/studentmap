@@ -1,0 +1,12 @@
+<div data-role="header" class="show_room">
+  <a href="#" data-rel="back">Tillbaka</a>
+  <h1><%= @room.name %></h1>
+</div>
+
+<div id="latitude" class="hiddenValue"><%= @room.building.latitude %></div>
+<div id="longditude" class="hiddenValue"><%= @room.building.longditude %></div>
+<div id="roomName" class="hiddenValue"><%= @room.building.name %></div>
+
+<div data-role="content">
+  <div class="map_canvas" style="width:320px; height:460px"></div>
+</div>
