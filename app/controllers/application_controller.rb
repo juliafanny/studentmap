@@ -1,5 +1,11 @@
 class ApplicationController < ActionController::Base
+  has_mobile_fu
 	protect_from_forgery
+  
+  before_filter :set_request_format
+  def set_request_format
+    request.format = :mobile if is_mobile_device? || request.xhr?
+  end
 
   protected
 

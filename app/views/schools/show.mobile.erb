@@ -1,0 +1,12 @@
+<div data-role="header">
+  <a href="#" data-rel="back">Tillbaka</a>
+  <h1><%= @school.name %></h1>
+</div>
+
+<div data-role="content">
+  <ul data-role="listview" data-filter="true">
+    <% @rooms.each do |room| %>
+        <li><%= link_to room.name, room_path(room) %></li>
+    <% end %>
+  </ul>
+</div>
