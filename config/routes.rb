@@ -1,4 +1,8 @@
 Studentmap::Application.routes.draw do
+  get "mobile/index"
+  get "mobile/schools_data"
+  get "mobile/school_data"
+
   get "schools/index"
 
   resources :schools do

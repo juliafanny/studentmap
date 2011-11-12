@@ -1,3 +1,12 @@
 // Place all the styles related to the Rooms controller here.
 // They will automatically be included in application.css.
 // You can use Sass (SCSS) here: http://sass-lang.com/
+
+#googleMap {
+  margin: 0;
+  padding: 0;
+}
+
+#showRoom > div.ui-content{
+  padding: 0;
+}
