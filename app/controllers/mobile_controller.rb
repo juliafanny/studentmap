@@ -17,5 +17,15 @@ class MobileController < ApplicationController
     }
     render :json => @data.to_json, :callback => params[:callback]
   end
+  
+  def rooms_data
+    @school = School.find(params[:id])
+    render :json => @school.rooms.to_json, :callback => params[:callback]
+  end
+  
+  def buildings_data
+    @school = School.find(params[:id])
+    render :json => @school.buildings.to_json, :callback => params[:callback]
+  end
 
 end

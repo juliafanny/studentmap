@@ -11,7 +11,7 @@
 
 <div data-role="page" id="listRooms">
   <div data-role="header">
-    <a href="#" data-rel="back">Tillbaka</a>
+    <a href="#listSchools" data-direction="reverse" data-icon="arrow-l">Tillbaka</a>
     <h1></h1>
   </div>
 
@@ -23,7 +23,7 @@
 
 <div data-role="page" id="showRoom">
   <div data-role="header">
-    <a href="#" data-rel="back">Tillbaka</a>
+    <a href="#listRooms" data-direction="reverse" data-icon="arrow-l">Tillbaka</a>
     <h1></h1>
   </div>
 
@@ -31,3 +31,17 @@
     <div id="googleMap"></div>
   </div>
 </div>
+
+
+
+<script id="school-template" type="text/html">
+  <li>
+    <a href="#listRooms" data-id="<%%= id %>"><%%= name %></a>
+  </li>
+</script>
+
+<script id="room-template" type="text/html">
+  <li>
+    <a href="#showRoom" data-id="<%%= id %>"><%%= name %></a>
+  </li>
+</script>
