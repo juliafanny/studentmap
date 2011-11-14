@@ -1,285 +1,208 @@
+var StudentMap = StudentMap || {};
 
-var studentMap = function() {
-  
-  this.map = null;
-  this.buildingMarker = null;
-  this.roomMarker = null;
-  
-  this.currentSchool = null;
-  this.currentRoom = null;
-  
-  this.debug = true;
-  
-  this.dbVersion = '1.0';
-  this.db = null;
-  this.tables = {
-    'schools': 'CREATE TABLE IF NOT EXISTS schools (' +
-      'id INTEGER PRIMARY KEY AUTOINCREMENT,' + 
-      'name VARCHAR(255));',
-    
-    'buildings': 'CREATE TABLE IF NOT EXISTS buildings (' +
-      'id INTEGER PRIMARY KEY AUTOINCREMENT,' + 
-      'school_id INTEGER,' + 
-      'name VARCHAR(255),' +
-      'latitude DECIMAL,' +
-      'longditude DECIMAL);',
-      
-    'rooms': 'CREATE TABLE IF NOT EXISTS rooms (' +
-      'id INTEGER PRIMARY KEY AUTOINCREMENT,' + 
-      'building_id INTEGER,' + 
-      'name VARCHAR(255));'
-  };
-  
-  this.init = function() {
-    this.initDatabase(function() {
-      this.loadData('schools', function() {
-        this.updateSchoolsView();
-      }.bind(this));
-    }.bind(this));
-    
-    $("div#listRooms").live('pagebeforeshow', function() {
-      this.loadData('school', function() {
-        this.updateSchoolView();
-      }.bind(this), {'id': this.currentSchool});
-    }.bind(this));
-    
-    $("div#showRoom").live('pagebeforeshow', function(event) {
-      if(event['target']['id'] == 'showRoom') {
-        this.updateRoomView();
-      }
-    }.bind(this));
-  };
-  
-  this.updateSchoolsView = function() {
-    this.getData('*', 'schools', function(schools) {
-      var ul = $("#schoolList");
-      
-      $(ul).empty();
-      
-      for(var i in schools) {
-        var school = schools[i];
-        var link = $('<a href="#listRooms" data-id="' + school['id'] + '">' + school['name'] + '</a>');
-        
-        $(ul).append(link);
-        $(link).wrap('<li>');
-      }
-      
-      $(ul).listview('refresh');
-      
-      $(ul).find('a').live('vclick', function(event) {
-        this.currentSchool = $(event.target).attr('data-id');
-      }.bind(this));
-    }.bind(this));
-  };
-  
-  this.updateSchoolView = function() {
-    this.getData('*', 'schools', function(school) {
-      this.getData('r.*', 'rooms r, buildings b, schools as s', 
-      function(rooms) {
-        var ul = $("#roomList");
+// Google maps variables
+StudentMap.map = null;
+StudentMap.mapInfoWindow = null;
+StudentMap.buildingMarker = null;
 
-        $(ul).empty();
+StudentMap.init = function(options) {
+  _.extend(StudentMap.options, options);
 
-        for(var i in rooms) {
-          var room = rooms[i];
-          var link = $('<a href="#showRoom" data-id="' + room['id'] + '">' + room['name'] + '</a>');
-
-          $(ul).append(link);
-          $(link).wrap('<li>');
-        }
-
-        $(ul).listview('refresh');
-
-        $(ul).find('a').live('vclick', function(event) {
-          this.currentRoom = $(event.target).attr('data-id');
-        }.bind(this));
-
-        $('#showRoom > div[data-role=header] > h1').text(school['name']);
-      }.bind(this), 'WHERE b.id = r.building_id AND s.id = b.school_id AND s.id = ?', [this.currentSchool]);
-    }.bind(this), 'WHERE id = ?', [this.currentSchool]);
-  };
-  
-  this.updateRoomView = function() {
-    this.getData('r.*, b.name as building_name, b.latitude as building_latitude, ' +
-                 'b.longditude as building_longditude', 'rooms r, buildings b', 
-      function(room) {
-      var buildingLocation = new google.maps.LatLng(
-          room['building_latitude'], room['building_longditude']);
-      var myOptions = {
-        'zoom': 16,
-        'center': buildingLocation,
-        'mapTypeId': google.maps.MapTypeId.SATELLITE
-      };
-
-      if(this.map == null) {
-        this.map = new google.maps.Map($('#googleMap').get(0), myOptions);
-        this.buildingMarker = new google.maps.Marker({
-          'position': buildingLocation, 
-          'map': this.map, 
-          'title': room['building_name']
-        });
-        
-        $(window).bind('orientationchange', function(){
-          this.resizeMap();
-        });
-        this.resizeMap();
-      } else {
-        this.map.setCenter(buildingLocation);
-        this.buildingMarker.setPosition(buildingLocation);
-      }
-      
-      $('#showRoom > div[data-role=header] > h1').text(room['name']);
-    }.bind(this), 'WHERE b.id = r.building_id AND r.id=?', [this.currentRoom]);
-  };
-  
-  this.resizeMap = function() {
-    $('#googleMap').css('width', $(window).width() + 'px');
-    $('#googleMap').css('height', ($(window).height() - 45) + 'px');
-  };
-  
-  this.getData = function(what, table, callback, where, args) {
-    if(typeof(arguments) === 'undefined') {
-      args = [];
-    }
-    if(typeof(where) === 'undefined') {
-      where = '';
-    }
-    
-    app.db.transaction(function(tx) {
-      tx.executeSql('SELECT ' + what + ' FROM ' + table + ' ' + where + ';', args, 
-      function(tx, result) {
-        var data = [];
-        
-        if(result.rows.length > 1) {
-          for(var i = 0; i < result.rows.length; i++) {
-            data.push(result.rows.item(i));
-          }
-        } else if(result.rows.length == 1) {
-          data = result.rows.item(0);
-        }
-        
-        if(typeof(callback) !== 'undefined') {
-          callback(data);
-        }
-      }.bind(this), this.dbError.bind(this));
-    }.bind(this), this.dbError.bind(this));
-  };
-  
-  this.loadData = function(name, callback, args) {
-    if(typeof(args) === 'undefined') {
-      args = {};
-    }
-    
-    if(window.navigator.onLine) {
-      $.ajax({
-        'type': 'GET',
-        'url': name + '_data',
-        'dataType': 'jsonp',
-        'timeout': 10000,
-        'data': args,
-        'success': function(data) {
-          this.handleData(name, data, callback);
-        }.bind(this),
-        'error': function(jqXHR, textStatus) {
-          this.log('get ' + name + ' data error: ' + textStatus);
-          if(typeof(callback) !== 'undefined') {
-            callback();
-          }
-        }.bind(this)
-      });
-    } else {
-      if(typeof(callback) !== 'undefined') {
-        callback();
-      }
-    }
-  } 
-  
-  this.handleData = function(name, data, callback) {
-    this.db.transaction(function(tx) {
-      if(name == 'schools') {
-        tx.executeSql('DELETE FROM schools;', [], function(tx, result) {
-          for(var i in data) {
-            tx.executeSql('INSERT INTO schools (id, name) VALUES (?, ?);',
-                  [data[i]['id'], data[i]['name']], null, this.dbError.bind(this));
-          }
-        }.bind(this), this.dbError.bind(this));
-      } else if(name == 'school') {
-        tx.executeSql('DELETE FROM rooms;', [], function(tx, result) {
-          tx.executeSql('DELETE FROM buildings;', [], function(tx, result) {
-            for(var i in data['rooms']) {
-              var room = data['rooms'][i];
-              tx.executeSql('INSERT INTO rooms (id, building_id, name) VALUES (?, ?, ?);',
-                    [room['id'], room['building_id'], room['name']], null, this.dbError.bind(this));
-            }
-            for(var i in data['buildings']) {
-              var building = data['buildings'][i];
-              tx.executeSql('INSERT INTO buildings (id, school_id, name, ' + 
-                'latitude, longditude) VALUES (?, ?, ?, ?, ?);',
-                [building['id'], building['school_id'], building['name'], 
-                 building['latitude'], building['longditude']], 
-                null, this.dbError.bind(this));
-            }
-          }.bind(this), this.dbError.bind(this));
-        }.bind(this), this.dbError.bind(this));
-        
-      }
-      
-    }.bind(this), this.dbError.bind(this), function() {
-      if(typeof(callback) !== 'undefined') {
-        callback();
-      }
-    });
-  }
-  
-  this.initDatabase = function(callback) {
-    var dbSize = 5 * 1024 * 1024; // 5MB
-    
-    this.db = window.openDatabase('StudentMap', '', '', dbSize);
-    
-    // Check the version of the database.
-    if(this.db.version != this.dbVersion) {
-      // The client has an old version of the database, drop all tables.
-      this.db.changeVersion(this.db.version, this.dbVersion, function(tx) {
-        this.createTables(true, callback);
-      }.bind(this), function(error) {
-        this.dbError(null, error).bind(this);
-      }.bind(this), function() {
-        
-      });
-    } else {
-      this.createTables(false, callback);
-    }
-  };
-  this.createTables = function(dropTables, callback) {
-    this.db.transaction(function(tx) {
-      for(var i in this.tables) {
-        if(dropTables) {
-          tx.executeSql('DROP TABLE IF EXISTS ' + i, 
-              null, null, this.dbError.bind(this));
-        }
-        tx.executeSql(this.tables[i], null, null, this.dbError.bind(this));
-      }
-    }.bind(this), this.dbError.bind(this), function() {
-      if(typeof(callback) !== 'undefined') {
-        callback();
-      }
-    });
-  };
-  this.dbError = function(tx, error) {
-    this.log('db error: ' + error.message)
-  };
-  this.log = function(message) {
-    if(this.debug && typeof console !== "undefined") {
-      console.log(message)
-    }
-  }
-  
+  StudentMap.views.schools = new StudentMap.views.Schools(
+                             {'collection': StudentMap.collections.schools});
 };
 
-app = new studentMap();
+// Models
+StudentMap.models = StudentMap.models || {};
 
-if(typeof(isMobile) !== 'undefined' && isMobile) {
-  $(document).bind("mobileinit", function() {
-    app.init();
-  });
-}
+StudentMap.models.School = Backbone.Model.extend();
+
+StudentMap.models.Room = Backbone.Model.extend({
+  'initialize': function() {
+    var building = null;
+
+    for(var i in StudentMap.collections.buildings) {
+      building = StudentMap.collections.buildings[i]
+                 .get(this.attributes['building_id']);
+
+      if(building != null) {
+        this.building = building;
+      }
+    }
+  }
+});
+
+StudentMap.models.Building = Backbone.Model.extend({
+  'initialize': function() {
+    this.latLon = new google.maps.LatLng(
+        this.attributes.latitude, 
+        this.attributes.longditude);
+  }
+});
+
+// Collection classes
+StudentMap.collections = StudentMap.collections || {};
+
+StudentMap.collections.Schools = Backbone.Collection.extend({
+  'model': StudentMap.models.School,
+  'url': '/mobile/schools_data'
+});
+
+StudentMap.collections.Rooms = Backbone.Collection.extend({
+  'model': StudentMap.models.Room,
+  'url': '/mobile/rooms_data/?id='
+});
+
+StudentMap.collections.Buildings = Backbone.Collection.extend({
+  'model': StudentMap.models.Building,
+  'url': '/mobile/buildings_data/?id='
+});
+
+// Fetched collections
+StudentMap.collections.schools = {};
+StudentMap.collections.rooms = {};      // Multiple collections, one per school.
+StudentMap.collections.buildings = {};  // Multiple collections, one per school.
+
+// Views
+StudentMap.views = StudentMap.views || {};
+
+StudentMap.views.Schools = Backbone.View.extend({
+  'el': '#schoolList',
+  'initialize': function() {
+    this.template = _.template($('#school-template').html());
+
+    this.collection = StudentMap.collections.schools = 
+                      new StudentMap.collections.Schools();
+    this.collection.bind('all', this.render, this);
+    this.collection.fetch();
+
+    $(this.el).delegate('a', 'click', function(e){
+      var id = $(e.currentTarget).attr('data-id');
+      StudentMap.views.school = new StudentMap.views.School({'school_id': id});
+    }.bind(this));
+  },
+  'render': function() {
+    $(this.el).empty();
+
+    this.collection.each(function(school) {
+      $(this.el).append(this.template(school.attributes));
+    }.bind(this));
+
+    $(this.el).listview('refresh');
+
+    return this;
+  }
+});
+
+StudentMap.views.School = Backbone.View.extend({
+  'el': '#roomList',
+  'initialize': function(options) {
+    this.template = _.template($('#room-template').html());
+
+    // Load the buildings for this school.
+    this.buildings = StudentMap.collections.buildings[options.school_id] = 
+                     new StudentMap.collections.Buildings();
+    this.buildings.bind('all', this.render, this);
+    this.buildings.url = '/mobile/buildings_data/?id=' + options.school_id;
+    this.buildings.fetch();
+
+    // Load the rooms for this school.
+    this.collection = StudentMap.collections.rooms[options.school_id] = 
+                      new StudentMap.collections.Rooms();
+    this.collection.bind('all', this.render, this);
+    this.collection.url = '/mobile/rooms_data/?id=' + options.school_id;
+    this.collection.fetch();
+
+    $(this.el).delegate('a', 'click', function(e){
+      var id = $(e.currentTarget).attr('data-id');
+      StudentMap.views.map = new StudentMap.views.Map(
+                             {'room_id': id, 'school_id': options.school_id});
+    }.bind(this));
+  },
+  'render': function() {
+    $(this.el).empty();
+
+    this.collection.each(function(school) {
+      $(this.el).append(this.template(school.attributes));
+    }.bind(this));
+
+    $(this.el).listview('refresh');
+
+    return this;
+  }
+});
+
+StudentMap.views.Map = Backbone.View.extend({
+  'el': '#googleMap',
+  'initialize': function(options) {
+    this.roomId = options.room_id;
+    this.schoolId = options.school_id;
+    var room = StudentMap.collections.rooms[this.schoolId].get(this.roomId);
+
+    var myOptions = {
+      'zoom': 18,
+      'center': room.building.latLon,
+      'mapTypeId': google.maps.MapTypeId.SATELLITE
+    };
+
+    StudentMap.map = new google.maps.Map($('#googleMap').get(0), myOptions);
+    StudentMap.buildingMarker = new google.maps.Marker({
+      'position': room.building.latLon, 
+      'map': StudentMap.map, 
+      'title': room.building.name
+    });
+    StudentMap.mapInfoWindow = new google.maps.InfoWindow({
+      'content': ''
+    });
+    StudentMap.mapInfoWindow.open(StudentMap.map);
+    
+    google.maps.event.addListener(StudentMap.buildingMarker, 'click', 
+    function() {
+      StudentMap.mapInfoWindow.open(StudentMap.map);
+    });
+
+    $(window).bind('orientationchange', function(){
+      this.resizeMap();
+    }.bind(this));
+    $(window).bind('resize', function(){
+      this.resizeMap();
+    }.bind(this));
+
+    this.render();
+  },
+  'render': function() {
+    var room = StudentMap.collections.rooms[this.schoolId].get(this.roomId);
+
+    $('#showRoom').live('pageshow', function() {
+      StudentMap.buildingMarker.setPosition(room.building.latLon);
+      StudentMap.mapInfoWindow.setPosition(room.building.latLon);
+      StudentMap.mapInfoWindow.setContent(room.attributes['name'] + 
+            ' i byggnad ' + room.building.attributes['name']);
+
+      window.setTimeout(function() {
+        StudentMap.map.setCenter(room.building.latLon);
+      }, 0);
+
+      this.resizeMap();
+    }.bind(this));
+
+    $('#showRoom > div[data-role=header] > h1').html(room.attributes.name);
+  },
+  'resizeMap': function() {
+    $('#googleMap').css('width', $(window).width() + 'px');
+    $('#googleMap').css('height', ($(window).height() - 42) + 'px');
+
+    google.maps.event.trigger(StudentMap.map, 'resize');
+  }
+});
+
+// Launch our app!
+$(function() {
+  StudentMap.init();
+});
+
+// Setup jQuery Mobile
+$(document).bind("mobileinit", function() {
+  $.mobile.hashListeningEnabled = false;
+  $.mobile.ajaxEnabled = false;
+});

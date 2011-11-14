@@ -2,12 +2,9 @@
 <html>
 <head>
   <title>Studentmap</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0;">
-  <%= stylesheet_link_tag    "application" %>
-  <link rel="stylesheet" href="http://code.jquery.com/mobile/1.0rc2/jquery.mobile-1.0rc2.min.css" />
-  <script type="text/javascript">var isMobile = true;</script>
-  <%= javascript_include_tag "application" %>
-  <script src="http://code.jquery.com/mobile/1.0rc2/jquery.mobile-1.0rc2.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1"></meta>
+  <%= stylesheet_link_tag    "mobileapp" %>
+  <%= javascript_include_tag "mobileapp" %>
   <%= csrf_meta_tags %>
   <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=false"></script>
   <%= yield :head %>
