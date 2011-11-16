@@ -31,9 +31,12 @@ SU.buildings.create({:name => 'K- HUS Q', :latitude => nil, :longditude => nil})
 SU.buildings.create({:name => 'K- HUS T', :latitude => nil, :longditude => nil})
 SU.buildings.create({:name => 'K- HUS Z', :latitude => nil, :longditude => nil})
 
-a.rooms.create({:name => 'A1'});
-a.rooms.create({:name => 'A2'});
-a.rooms.create({:name => 'A3-U-N'});
+100.times {|i| 
+a.rooms.create({:name => 'A' << (i + 1) });
+}
+# a.rooms.create({:name => 'A1'});
+# a.rooms.create({:name => 'A2'});
+# a.rooms.create({:name => 'A3-U-N'});
 
 b.rooms.create({:name => 'B1'});
 b.rooms.create({:name => 'B2'});

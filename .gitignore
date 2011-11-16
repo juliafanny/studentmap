@@ -5,3 +5,4 @@ tmp/
 .sass-cache/
 /nbproject/private/
 /solr/data/*
+*.DS_Store
