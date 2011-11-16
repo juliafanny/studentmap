@@ -6,4 +6,11 @@
 //
 //= require jquery
 //= require jquery_ujs
-//= require_tree .
+//= require courses
+//= require google_maps
+//= require lessons
+//= require rooms
+//= require schools
+//= require scools
+//= require sessions
+//= require users

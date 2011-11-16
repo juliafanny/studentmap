@@ -6,8 +6,8 @@
 //
 //= require jquery
 //= require jquery_ujs
-//= require underscore
-//= require backbone
-//= require mobile
+//= require mobile/underscore
+//= require mobile/backbone
+//= require mobile/mobile
 //= require_self
-//= require jquery.mobile
+//= require mobile/jquery.mobile

@@ -1,7 +1,9 @@
 class MobileController < ApplicationController
   
   def index
-    
+    if(request.format != :mobile) 
+      redirect_to "/"
+    end
   end
   
   def schools_data
