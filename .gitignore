@@ -4,4 +4,4 @@ log/*.log
 tmp/
 .sass-cache/
 /nbproject/private/
-/solr/*
+/solr/data/*
