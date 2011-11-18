@@ -99,6 +99,8 @@ StudentMap.views.School = Backbone.View.extend({
   'initialize': function(options) {
     this.template = _.template($('#room-template').html());
 
+    this.model = StudentMap.collections.schools.get(options.school_id);
+      
     // Load the buildings for this school.
     this.buildings = StudentMap.collections.buildings[options.school_id] = 
                      new StudentMap.collections.Buildings();
@@ -121,9 +123,11 @@ StudentMap.views.School = Backbone.View.extend({
   },
   'render': function() {
     $(this.el).empty();
+    
+    $('#listRooms > div[data-role=header] > h1').text(this.model.attributes.name);
 
-    this.collection.each(function(school) {
-      $(this.el).append(this.template(school.attributes));
+    this.collection.each(function(room) {
+      $(this.el).append(this.template(room.attributes));
     }.bind(this));
 
     $(this.el).listview('refresh');
