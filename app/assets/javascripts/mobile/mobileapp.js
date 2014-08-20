@@ -8,6 +8,9 @@
 //= require jquery_ujs
 //= require mobile/underscore
 //= require mobile/backbone
-//= require mobile/mobile
-//= require_self
 //= require mobile/jquery.mobile
+//= require mobile/mobile
+//= require mobile/scrollview/jquery.easing.1.3
+//= require mobile/scrollview/jquery.mobile.scrollview
+//= require mobile/scrollview/scrollview
+//= require_self

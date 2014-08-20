@@ -6,4 +6,5 @@
  *= require mobile/mobile
  *= require mobile/rooms
  *= require mobile/jquery.mobile
+ *= require mobile/scrollview/jquery.mobile.scrollview
 */
